@@ -1,0 +1,5 @@
+sc stop AmneziaWGTunnel$AmneziaVPN
+sc delete AmneziaWGTunnel$AmneziaVPN
+taskkill /IM "@CLIENT_SERVICE_NAME@.exe" /F
+taskkill /IM "@CLIENT_TARGET_NAME@.exe" /F
+exit /b 0

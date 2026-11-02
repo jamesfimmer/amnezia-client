@@ -45,6 +45,7 @@ jobs:
           modules: "qtremoteobjects qt5compat qtshadertools qthttpserver qtwebsockets"
           dir: ${{ runner.temp }}
           setup-python: "true"
+          tools: "tools_ifw"
           cache: "true"
           aqtversion: "==3.3.0"
           py7zrversion: "==0.22.*"
@@ -101,5 +102,21 @@ jobs:
         with:
           name: MyVPN-windows-x64
           path: deploy/build/stage
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Package installer
+        shell: cmd
+        env:
+          QT_INSTALL_DIR: ${{ runner.temp }}
+        run: |
+          deploy\build.bat --installer ifw
+          if errorlevel 1 exit /b 1
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyVPN-windows-x64-installer
+          path: deploy/build/MyVPN_*_windows_x64.exe
           if-no-files-found: error
           retention-days: 14

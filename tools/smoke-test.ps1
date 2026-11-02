@@ -7,19 +7,24 @@ param(
 $ErrorActionPreference = 'Stop'
 $ClientDir = (Resolve-Path $ClientDir).Path
 
-$required = @('MyVPN.exe', 'MyVPN-service.exe', 'platforms\qwindows.dll')
+$required = @('MyVPN.exe', 'MyVPN-service.exe')
 foreach ($item in $required) {
     if (-not (Test-Path (Join-Path $ClientDir $item))) {
         throw "Missing $item in $ClientDir"
     }
 }
-if (-not (Test-Path (Join-Path $ClientDir 'qml'))) {
-    throw "Missing qml directory in $ClientDir"
+if (-not (Test-Path (Join-Path $ClientDir 'plugins\platforms\qwindows.dll'))) {
+    throw "Missing plugins\platforms\qwindows.dll in $ClientDir"
 }
 
 $mockScript = Join-Path $PSScriptRoot 'mock-provider\server.py'
-$python = (Get-Command python -ErrorAction Stop).Source
-$mock = Start-Process -FilePath $python -ArgumentList @($mockScript, '--port', $Port) -PassThru -WindowStyle Hidden
+$launcher = (Get-Command py -ErrorAction SilentlyContinue)
+if ($launcher) {
+    $mock = Start-Process -FilePath $launcher.Source -ArgumentList @('-3', $mockScript, '--port', $Port) -PassThru -WindowStyle Hidden
+} else {
+    $python = (Get-Command python -ErrorAction Stop).Source
+    $mock = Start-Process -FilePath $python -ArgumentList @($mockScript, '--port', $Port) -PassThru -WindowStyle Hidden
+}
 $app = $null
 try {
     Start-Sleep -Seconds 2
@@ -36,8 +41,8 @@ try {
     }
     "Window: $($app.MainWindowTitle)"
 
-    $key = 'HKCU:\Software\MyVPN.ORG\MyVPN'
-    $raw = (Get-ItemProperty -Path $key -Name 'Conf/providerServerMap' -ErrorAction Stop).'Conf/providerServerMap'
+    $key = 'HKCU:\Software\MyVPN.ORG\MyVPN\Conf'
+    $raw = (Get-ItemProperty -Path $key -Name 'providerServerMap' -ErrorAction Stop).providerServerMap
     $mapping = $raw | ConvertFrom-Json
     $names = @($mapping.PSObject.Properties.Name)
     if ($names.Count -eq 0) {

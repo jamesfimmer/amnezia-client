@@ -1,14 +1,27 @@
-set(CPACK_PACKAGE_VENDOR            AmneziaVPN)
+if(NOT CLIENT_APPLICATION_NAME)
+    set(CLIENT_APPLICATION_NAME "AmneziaVPN")
+endif()
+if(NOT CLIENT_TARGET_NAME)
+    set(CLIENT_TARGET_NAME "AmneziaVPN")
+endif()
+if(NOT CLIENT_ORGANIZATION_NAME)
+    set(CLIENT_ORGANIZATION_NAME "AmneziaVPN.ORG")
+endif()
+if(NOT CLIENT_SERVICE_NAME)
+    set(CLIENT_SERVICE_NAME "AmneziaVPN-service")
+endif()
+
+set(CPACK_PACKAGE_VENDOR            ${CLIENT_APPLICATION_NAME})
 set(CPACK_PACKAGE_VERSION           ${AMNEZIAVPN_VERSION})
 if(WIN32)
-    set(CPACK_PACKAGE_FILE_NAME "AmneziaVPN_${AMNEZIAVPN_VERSION}_windows_x64")
+    set(CPACK_PACKAGE_FILE_NAME "${CLIENT_APPLICATION_NAME}_${AMNEZIAVPN_VERSION}_windows_x64")
 elseif(APPLE AND NOT IOS AND NOT MACOS_NE)
-    set(CPACK_PACKAGE_FILE_NAME "AmneziaVPN_${AMNEZIAVPN_VERSION}_macos_x64")
+    set(CPACK_PACKAGE_FILE_NAME "${CLIENT_APPLICATION_NAME}_${AMNEZIAVPN_VERSION}_macos_x64")
 elseif(LINUX AND NOT ANDROID)
-    set(CPACK_PACKAGE_FILE_NAME "AmneziaVPN_${AMNEZIAVPN_VERSION}_linux_x64")
+    set(CPACK_PACKAGE_FILE_NAME "${CLIENT_APPLICATION_NAME}_${AMNEZIAVPN_VERSION}_linux_x64")
 endif()
-set(CPACK_PACKAGE_INSTALL_DIRECTORY AmneziaVPN)
-set(CPACK_PACKAGE_EXECUTABLES       AmneziaVPN AmneziaVPN)
+set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CLIENT_APPLICATION_NAME})
+set(CPACK_PACKAGE_EXECUTABLES       ${CLIENT_TARGET_NAME} ${CLIENT_APPLICATION_NAME})
 set(CPACK_PRE_BUILD_SCRIPTS         ${CMAKE_CURRENT_LIST_DIR}/sign_binaries.cmake)
 set(CPACK_POST_BUILD_SCRIPTS        ${CMAKE_CURRENT_LIST_DIR}/sign_packages.cmake)
 set(CPACK_PROJECT_CONFIG_FILE       ${CMAKE_CURRENT_LIST_DIR}/CPackOptions.cmake)
@@ -23,8 +36,8 @@ else()
 endif()
 
 # === CPack IFW generator settings ===
-set(CPACK_IFW_PACKAGE_NAME                          AmneziaVPN)
-set(CPACK_IFW_PACKAGE_TITLE                         AmneziaVPN)
+set(CPACK_IFW_PACKAGE_NAME                          ${CLIENT_APPLICATION_NAME})
+set(CPACK_IFW_PACKAGE_TITLE                         ${CLIENT_APPLICATION_NAME})
 set(CPACK_IFW_PACKAGE_WIZARD_DEFAULT_WIDTH          600)
 set(CPACK_IFW_PACKAGE_WIZARD_DEFAULT_HEIGHT         380)
 set(CPACK_IFW_PACKAGE_WIZARD_STYLE                  Modern)
@@ -66,9 +79,17 @@ if(LINUX AND NOT ANDROID)
 endif()
 
 if(WIN32)
+    configure_file(
+        ${CMAKE_SOURCE_DIR}/deploy/data/windows/post_install.cmd.in
+        ${CMAKE_CURRENT_BINARY_DIR}/post_install.cmd
+    )
+    configure_file(
+        ${CMAKE_SOURCE_DIR}/deploy/data/windows/post_uninstall.cmd.in
+        ${CMAKE_CURRENT_BINARY_DIR}/post_uninstall.cmd
+    )
     install(FILES
-        ${CMAKE_SOURCE_DIR}/deploy/data/windows/post_install.cmd
-        ${CMAKE_SOURCE_DIR}/deploy/data/windows/post_uninstall.cmd
+        ${CMAKE_CURRENT_BINARY_DIR}/post_install.cmd
+        ${CMAKE_CURRENT_BINARY_DIR}/post_uninstall.cmd
         DESTINATION "."
         COMPONENT AmneziaVPN
     )
