@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.25.0 FATAL_ERROR)
 
+if(NOT CLIENT_APPLICATION_NAME)
+    set(CLIENT_APPLICATION_NAME "AmneziaVPN")
+endif()
+if(NOT CLIENT_SERVICE_NAME)
+    set(CLIENT_SERVICE_NAME "AmneziaVPN-service")
+endif()
+
 set(PROJECT AmneziaVPN-service)
 project(${PROJECT} VERSION ${AMNEZIAVPN_VERSION})
 
@@ -288,6 +295,7 @@ include_directories(
 
 
 add_executable(${PROJECT} ${SOURCES} ${HEADERS} ${RESOURCES})
+set_target_properties(${PROJECT} PROPERTIES OUTPUT_NAME ${CLIENT_SERVICE_NAME})
 target_link_libraries(${PROJECT} PRIVATE Qt6::Core Qt6::Widgets Qt6::Network Qt6::RemoteObjects Qt6::Core5Compat Qt6::DBus Qt6::Concurrent ${LIBS})
 target_compile_definitions(${PROJECT} PRIVATE "MZ_$<UPPER_CASE:${MZ_PLATFORM_NAME}>")
 

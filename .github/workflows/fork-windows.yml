@@ -90,10 +90,16 @@ jobs:
           deploy\build.bat
           if errorlevel 1 exit /b 1
 
+      - name: Stage portable client
+        shell: cmd
+        run: |
+          cmake --install deploy\build --config Release --prefix deploy\build\stage
+          if errorlevel 1 exit /b 1
+
       - name: Upload client
         uses: actions/upload-artifact@v4
         with:
           name: MyVPN-windows-x64
-          path: deploy/build/client/Release
+          path: deploy/build/stage
           if-no-files-found: error
           retention-days: 14
