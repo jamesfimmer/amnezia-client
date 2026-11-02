@@ -1,0 +1,99 @@
+name: Fork Windows build
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: "Provider API base URL compiled into the client"
+        required: false
+        default: "https://vpn.example.com"
+
+env:
+  QT_VERSION: "6.10.1"
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+
+    permissions:
+      contents: read
+
+    env:
+      PROD_AGW_PUBLIC_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      PROD_S3_ENDPOINT: "https://example.invalid"
+      FALLBACK_S3_ENDPOINT: "https://example.invalid"
+      DEV_AGW_PUBLIC_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      DEV_AGW_ENDPOINT: "https://example.invalid"
+      DEV_S3_ENDPOINT: "https://example.invalid"
+      FREE_V2_ENDPOINT: "https://example.invalid"
+      PREM_V1_ENDPOINT: "https://example.invalid"
+
+    steps:
+      - name: Get sources
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+          fetch-depth: 1
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: "windows"
+          target: "desktop"
+          arch: "win64_msvc2022_64"
+          modules: "qtremoteobjects qt5compat qtshadertools qthttpserver qtwebsockets"
+          dir: ${{ runner.temp }}
+          setup-python: "true"
+          cache: "true"
+          aqtversion: "==3.3.0"
+          py7zrversion: "==0.22.*"
+          extra: "--base https://mirrors.ocf.berkeley.edu/qt/"
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: "x64"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Conan
+        run: pip install "conan==2.28.0" "cmake==3.31.10"
+
+      - name: Point the client at the provider API
+        shell: pwsh
+        env:
+          PROVIDER_BUILD_URL: ${{ inputs.api_url }}
+        run: |
+          $brand = "brand/brand.cmake"
+          $url = $env:PROVIDER_BUILD_URL
+          if ([string]::IsNullOrWhiteSpace($url)) { $url = "https://vpn.example.com" }
+          $uri = $null
+          if (-not [Uri]::TryCreate($url, [UriKind]::Absolute, [ref]$uri) -or
+              $uri.Scheme -ne "https" -or $uri.UserInfo -or $uri.Query -or $uri.Fragment -or
+              $url -match '[\s"\\;$]') {
+            throw "api_url must be an HTTPS base URL without credentials, query or fragment"
+          }
+          $content = Get-Content $brand -Raw
+          $content = $content -replace 'set\(CLIENT_PROVIDER_API_URL "[^"]*"', "set(CLIENT_PROVIDER_API_URL `"$url`""
+          Set-Content $brand $content -NoNewline
+          Get-Content $brand
+
+      - name: Build
+        shell: cmd
+        env:
+          QT_INSTALL_DIR: ${{ runner.temp }}
+        run: |
+          deploy\build.bat
+          if errorlevel 1 exit /b 1
+
+      - name: Upload client
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyVPN-windows-x64
+          path: deploy/build/client/Release
+          if-no-files-found: error
+          retention-days: 14

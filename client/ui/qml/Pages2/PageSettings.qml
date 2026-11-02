@@ -29,6 +29,20 @@ PageType {
         }
     }
 
+    Connections {
+        target: ProviderController
+
+        function onServersUpdated(count) {
+            PageController.showNotificationMessage(qsTr("VPN servers updated: %1").arg(count))
+        }
+
+        function onLastErrorChanged() {
+            if (ProviderController.lastError.length > 0) {
+                PageController.showNotificationMessage(ProviderController.lastError)
+            }
+        }
+    }
+
     FlickableType {
         id: flickable
 
@@ -116,6 +130,17 @@ PageType {
                 trailingIconSource: "qrc:/images/controls/chevron-right.svg"
 
                 onClicked: PageController.goToPage(PageEnum.PageSettingsBackup)
+            }
+
+            ListItemType {
+                Layout.fillWidth: true
+                Layout.leftMargin: 16
+                Layout.rightMargin: 16
+
+                text: qsTr("Refresh VPN servers")
+                icon.source: "qrc:/images/controls/refresh-cw.svg"
+
+                onClicked: ProviderController.refresh()
             }
 
             ListItemType {

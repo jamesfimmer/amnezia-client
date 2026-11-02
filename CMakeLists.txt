@@ -22,6 +22,8 @@ project(${PROJECT} VERSION ${AMNEZIAVPN_VERSION}
 
 option(AMNEZIA_BUILD_TESTS "Build test executables" OFF)
 
+include(${CMAKE_SOURCE_DIR}/brand/brand.cmake OPTIONAL)
+
 # trigger conan to kick off `conan install` globally
 find_package(OpenSSL REQUIRED)
 if (PREBUILTS_ONLY)
