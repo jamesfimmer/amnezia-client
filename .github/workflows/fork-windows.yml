@@ -93,7 +93,7 @@ jobs:
       - name: Stage portable client
         shell: cmd
         run: |
-          cmake --install deploy\build --config Release --prefix deploy\build\stage
+          cmake --install deploy\build --config Release --prefix "%GITHUB_WORKSPACE%\deploy\build\stage"
           if errorlevel 1 exit /b 1
 
       - name: Upload client
